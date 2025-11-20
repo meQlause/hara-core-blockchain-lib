@@ -10,21 +10,11 @@ import (
 	utils "github.com/meQlause/hara-core-blockchain-lib/internal/utils"
 )
 
-type BuilderState int
-
-const (
-	StateInitial BuilderState = iota
-	StateBodyBuilt
-	StateHeadersSet
-	StateRequestBuilt
-	StateExecuted
-)
-
 type RPCBuilder[T any] struct {
 	body          *utils.RPCRequest[T]
 	requestToSend *http.Request
-	state         BuilderState
 	client        *http.Client
+	state         utils.BuilderState
 	headers       http.Header
 	url           string
 }
@@ -34,12 +24,12 @@ func NewRPCBuilder[T any](url string, client *http.Client) *RPCBuilder[T] {
 		url:     url,
 		client:  client,
 		headers: make(http.Header),
-		state:   StateInitial,
+		state:   utils.StateInitial,
 	}
 }
 
 func (b *RPCBuilder[T]) BuildBody(version string, id uint64, method string, params T) *RPCBuilder[T] {
-	if b.state != StateInitial {
+	if b.state != utils.StateInitial {
 		panic(fmt.Sprintf("invalid state transition: cannot build body from state %d", b.state))
 	}
 
@@ -50,22 +40,22 @@ func (b *RPCBuilder[T]) BuildBody(version string, id uint64, method string, para
 		Params:  params,
 	}
 
-	b.state = StateBodyBuilt
+	b.state = utils.StateBodyBuilt
 	return b
 }
 
 func (b *RPCBuilder[T]) SetHeader(key, value string) *RPCBuilder[T] {
-	if b.state != StateBodyBuilt && b.state != StateHeadersSet {
+	if b.state != utils.StateBodyBuilt && b.state != utils.StateHeadersSet {
 		panic(fmt.Sprintf("invalid state transition: cannot set headers from state %d", b.state))
 	}
 
 	b.headers.Set(key, value)
-	b.state = StateHeadersSet
+	b.state = utils.StateHeadersSet
 	return b
 }
 
 func (b *RPCBuilder[T]) BuildRequest(ctx context.Context) *RPCBuilder[T] {
-	if b.state != StateHeadersSet {
+	if b.state != utils.StateHeadersSet {
 		panic(fmt.Sprintf("invalid state: cannot build request from state %d, headers must be set first", b.state))
 	}
 
@@ -86,12 +76,12 @@ func (b *RPCBuilder[T]) BuildRequest(ctx context.Context) *RPCBuilder[T] {
 	}
 
 	b.requestToSend = req
-	b.state = StateRequestBuilt
+	b.state = utils.StateRequestBuilt
 	return b
 }
 
 func (b *RPCBuilder[T]) Execute(ctx context.Context) (*utils.RPCResponse, error) {
-	if b.state != StateRequestBuilt {
+	if b.state != utils.StateRequestBuilt {
 		return nil, fmt.Errorf("invalid state: cannot execute from state %d, request must be built first", b.state)
 	}
 
@@ -111,11 +101,11 @@ func (b *RPCBuilder[T]) Execute(ctx context.Context) (*utils.RPCResponse, error)
 		return nil, fmt.Errorf("RPC error %d: %s", result.Error.Code, result.Error.Message)
 	}
 
-	b.state = StateExecuted
+	b.state = utils.StateExecuted
 	return &result, nil
 }
 
-func (b *RPCBuilder[T]) GetState() BuilderState {
+func (b *RPCBuilder[T]) GetState() utils.BuilderState {
 	return b.state
 }
 
@@ -123,6 +113,6 @@ func (b *RPCBuilder[T]) Reset() *RPCBuilder[T] {
 	b.body = nil
 	b.requestToSend = nil
 	b.headers = make(http.Header)
-	b.state = StateInitial
+	b.state = utils.StateInitial
 	return b
 }
