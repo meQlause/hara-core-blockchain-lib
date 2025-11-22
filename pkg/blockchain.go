@@ -19,9 +19,9 @@ type Blockchain struct {
 	haraAbiENS map[string]*utils.ABIResult
 }
 
-func NewBlockchain(wallet *blockchain.Wallet, network *Network, chainId int64) *Blockchain {
+func NewBlockchain(seed string, network *Network, chainId int64) *Blockchain {
 	return &Blockchain{
-		Wallet:     wallet,
+		Wallet:     blockchain.NewWallet(seed),
 		Network:    network,
 		ChainID:    chainId,
 		haraAbiENS: make(map[string]*utils.ABIResult),
@@ -74,7 +74,7 @@ func (bc *Blockchain) CallContract(
 	if err != nil {
 		return nil, fmt.Errorf("abi pack error: %w", err)
 	}
-	
+
 	raw := "0x" + common.Bytes2Hex(data)
 	resp, err := bc.Network.Call(ctx, c.Address, raw)
 	if err != nil {

@@ -35,9 +35,8 @@ gasPrice - blockNumber - chainId - pendingNonce
 ### Inisialisasi
 
 ``` go
-wallet := blockchain.NewWallet("seed")
 net := pkg.NewNetwork("https://rpc.local", "2.0", 1)
-bc := pkg.NewBlockchain(wallet, net, 1)
+bc := pkg.NewBlockchain("seed", net, 1)
 ```
 
 ### Resolve contract & ABI
