@@ -1,12 +1,38 @@
 package utils
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+)
+
+type ABIResult struct {
+	Address string
+	ABI     any
+}
 
 type RPCRequest[T any] struct {
 	JsonRPC string `json:"jsonrpc"`
-	ID      uint64 `json:"id"`
+	ID      uint8  `json:"id"`
 	Method  string `json:"method"`
 	Params  T      `json:"params"`
+}
+
+type ContractConfig struct {
+	ABIJSON         string
+	Address         string
+	CallBackend     bind.ContractCaller
+	TransactBackend bind.ContractTransactor
+	LogBackend      bind.ContractFilterer
+}
+
+type SignResult struct {
+	Message     string `json:"message"`
+	MessageHash string `json:"messageHash"`
+	R           string `json:"r"`
+	S           string `json:"s"`
+	V           uint8  `json:"v"`
+	Signature   string `json:"signature"`
 }
 
 type RPCPayload struct {

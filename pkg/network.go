@@ -8,22 +8,26 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/meQlause/hara-core-blockchain-lib/internal/network"
-	"github.com/meQlause/hara-core-blockchain-lib/internal/utils"
+	"github.com/meQlause/hara-core-blockchain-lib/utils"
 )
 
 type Network struct {
-	URL    string
-	client *network.RPCClient
+	URL     string
+	version string
+	id      uint8
+	client  *network.RPCClient
 }
 
-func NewNetwork(url string) *Network {
+func NewNetwork(url string, version string, id uint8) *Network {
 	client, err := network.NewClientRPC(url)
 	if err != nil {
 		panic(err)
 	}
 	return &Network{
-		URL:    url,
-		client: client,
+		URL:     url,
+		version: version,
+		id:      id,
+		client:  client,
 	}
 }
 
@@ -62,13 +66,13 @@ func (n *Network) IsOnline(ctx context.Context) bool {
 	return err == nil
 }
 
-func (n *Network) CallContract(ctx context.Context, to common.Address, data string) (json.RawMessage, error) {
+func (n *Network) Call(ctx context.Context, to common.Address, data string) (json.RawMessage, error) {
 	if n.client == nil {
 		return nil, fmt.Errorf("RPC client not initialized")
 	}
 
 	response, err := network.NewRPCBuilder[utils.EthCallParams](n.URL, n.client.HttpClient).
-		BuildBody("2.0", 1, "eth_call", utils.EthCallParams{
+		BuildBody(n.version, n.id, "eth_call", utils.EthCallParams{
 			Transaction: &utils.RPCPayload{
 				To:   to.Hex(),
 				Data: data,
@@ -81,6 +85,20 @@ func (n *Network) CallContract(ctx context.Context, to common.Address, data stri
 
 	if err != nil {
 		return nil, fmt.Errorf("RPC call failed: %w", err)
+	}
+
+	return response.Result, nil
+}
+
+func (n *Network) SendRawTx(ctx context.Context, rawHex string) (json.RawMessage, error) {
+	response, err := network.NewRPCBuilder[string](n.URL, n.client.HttpClient).
+		BuildBody(n.version, n.id, "eth_sendRawTransaction", rawHex).
+		SetHeader("Content-Type", "application/json").
+		BuildRequest(ctx).
+		Execute(ctx)
+
+	if err != nil {
+		return nil, fmt.Errorf("eth_sendRawTransaction failed: %w", err)
 	}
 
 	return response.Result, nil

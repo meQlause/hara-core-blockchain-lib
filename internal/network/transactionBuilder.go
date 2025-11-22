@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	utils "github.com/meQlause/hara-core-blockchain-lib/internal/utils"
+	utils "github.com/meQlause/hara-core-blockchain-lib/utils"
 )
 
 type RPCBuilder[T any] struct {
@@ -28,7 +28,7 @@ func NewRPCBuilder[T any](url string, client *http.Client) *RPCBuilder[T] {
 	}
 }
 
-func (b *RPCBuilder[T]) BuildBody(version string, id uint64, method string, params T) *RPCBuilder[T] {
+func (b *RPCBuilder[T]) BuildBody(version string, id uint8, method string, params T) *RPCBuilder[T] {
 	if b.state != utils.StateInitial {
 		panic(fmt.Sprintf("invalid state transition: cannot build body from state %d", b.state))
 	}
