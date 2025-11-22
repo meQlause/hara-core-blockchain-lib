@@ -1,1 +1,1 @@
-# DIDRoot-sdk
+# Hara Blockchain library
