@@ -2,13 +2,24 @@ package utils
 
 import (
 	"encoding/json"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 type ABIResult struct {
 	Address string
 	ABI     any
+}
+
+type TransactionParams struct {
+	Nonce    uint64
+	To       common.Address
+	Value    *big.Int
+	GasLimit uint64
+	GasPrice *big.Int
+	Data     []byte
 }
 
 type RPCRequest[T any] struct {
