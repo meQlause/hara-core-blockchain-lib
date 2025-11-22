@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	utils "github.com/meQlause/hara-core-blockchain-lib/utils"
+	"github.com/meQlause/hara-core-blockchain-lib/utils"
 )
 
 type RPCBuilder[T any] struct {
